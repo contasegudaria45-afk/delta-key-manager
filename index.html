@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Delta Key Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #04060f;
+    --card: #080c1a;
+    --input: #0a0e1c;
+    --accent: #00d2ff;
+    --dim: #0055aa;
+    --glow: #00ffff;
+    --text: #ddeeff;
+    --sub: #4a7aaa;
+    --ok: #00e682;
+    --danger: #ff3c5a;
+    --warn: #ffb400;
+    --border: #0a1830;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { background: var(--bg); color: var(--text); font-family: 'Share Tech Mono', monospace; min-height: 100vh; overflow-x: hidden; }
+
+  /* HEADER */
+  .header {
+    background: linear-gradient(180deg, #060a18 0%, var(--bg) 100%);
+    border-bottom: 1px solid #0066aa44;
+    padding: 16px 20px 12px;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .header-sub { font-size: 10px; letter-spacing: 4px; color: var(--sub); margin-bottom: 2px; }
+  .header-title { font-size: 22px; font-weight: 700; color: var(--accent); letter-spacing: 3px; text-shadow: 0 0 20px #00ffff88; font-family: 'Rajdhani', sans-serif; }
+
+  /* TABS */
+  .tabs { display: flex; gap: 8px; padding: 14px 16px 0; }
+  .tab {
+    flex: 1; padding: 10px 6px; font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+    cursor: pointer; border-radius: 8px; font-family: 'Share Tech Mono', monospace; font-weight: bold;
+    background: #080c1a; color: var(--sub); border: 1px solid #0a1830; transition: all 0.2s;
+  }
+  .tab.active { background: linear-gradient(135deg, var(--dim), #003366); color: var(--accent); border-color: #00d2ff66; }
+  .tab-settings { flex: 0 0 auto; padding: 10px 14px; }
+
+  /* PAGE */
+  .page { display: none; padding: 16px; max-width: 480px; margin: 0 auto; }
+  .page.active { display: block; }
+
+  /* CARD */
+  .card { background: var(--card); border: 1px solid #0066aa44; border-radius: 12px; padding: 18px; margin-bottom: 14px; }
+  .card-title { font-size: 10px; letter-spacing: 4px; color: var(--sub); text-transform: uppercase; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px var(--glow); flex-shrink: 0; display: inline-block; }
+  .dot-ok { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
+
+  /* FORM */
+  label { font-size: 10px; letter-spacing: 3px; color: var(--sub); text-transform: uppercase; display: block; margin-bottom: 6px; }
+  input[type=text], input[type=password] {
+    width: 100%; background: var(--input); border: 1px solid #0066aa66; border-radius: 8px;
+    color: var(--text); font-size: 13px; padding: 12px 14px; outline: none;
+    font-family: 'Share Tech Mono', monospace; margin-bottom: 14px; transition: border 0.2s;
+  }
+  input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px #00d2ff22; }
+
+  /* BUTTONS */
+  .btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 13px; font-size: 12px; letter-spacing: 2px; text-transform: uppercase;
+    cursor: pointer; border-radius: 8px; font-family: 'Share Tech Mono', monospace; font-weight: bold;
+    background: linear-gradient(135deg, var(--dim), #003366); color: var(--accent);
+    border: 1px solid #00d2ff66; transition: all 0.15s; margin-bottom: 10px;
+  }
+  .btn:active { opacity: 0.7; transform: scale(0.98); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-ok { background: linear-gradient(135deg, #003322, #001a11); color: var(--ok); border-color: #00e68266; }
+  .btn-danger { background: linear-gradient(135deg, #330011, #1a0008); color: var(--danger); border-color: #ff3c5a44; }
+  .btn-small { width: auto; padding: 7px 12px; font-size: 10px; letter-spacing: 1px; margin: 0; }
+  .btn-last { margin-bottom: 0; }
+
+  /* STATS */
+  .stats { display: flex; }
+  .stat { flex: 1; text-align: center; padding: 4px 0; }
+  .stat + .stat { border-left: 1px solid #0a1830; }
+  .stat-num { font-size: 28px; font-weight: bold; color: var(--accent); text-shadow: 0 0 14px #00ffff66; display: block; line-height: 1.1; font-family: 'Rajdhani', sans-serif; }
+  .stat-num.ok { color: var(--ok); text-shadow: 0 0 14px #00e68266; }
+  .stat-num.danger { color: var(--danger); text-shadow: 0 0 14px #ff3c5a66; }
+  .stat-num.sub { color: var(--sub); }
+  .stat-label { font-size: 9px; letter-spacing: 3px; color: var(--sub); text-transform: uppercase; }
+
+  /* DURATION PILLS */
+  .durations { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .dur-pill {
+    padding: 8px 12px; font-size: 11px; font-family: 'Share Tech Mono', monospace;
+    cursor: pointer; border-radius: 6px; border: 1px solid #0066aa33;
+    background: #050810; color: var(--sub); transition: all 0.15s;
+  }
+  .dur-pill.active { background: #00e68222; color: var(--ok); border-color: #00e68266; font-weight: bold; }
+  .dur-pill:active { transform: scale(0.95); }
+
+  /* KEY ROW */
+  .key-row {
+    background: #050810; border: 1px solid #0066aa33; border-radius: 8px;
+    padding: 10px 12px; margin-bottom: 8px;
+  }
+  .key-row.expired { border-color: #ff3c5a33; }
+  .key-row-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .key-text { flex: 1; font-size: 12px; color: var(--accent); letter-spacing: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .key-text.expired { color: var(--danger); }
+  .key-row-bottom { display: flex; gap: 8px; align-items: center; }
+  .key-time { font-size: 10px; color: var(--ok); letter-spacing: 1px; }
+  .key-time.expired { color: var(--danger); }
+  .key-dur { font-size: 9px; color: var(--sub); letter-spacing: 1px; }
+
+  /* EMPTY */
+  .empty { text-align: center; color: var(--sub); font-size: 12px; padding: 24px 0; letter-spacing: 1px; line-height: 1.8; }
+
+  /* CODE BOX */
+  .code-box {
+    background: #020408; border: 1px solid #0066aa33; border-radius: 8px;
+    padding: 14px; font-size: 11px; color: #5aaa6a; overflow-x: auto;
+    line-height: 1.7; white-space: pre-wrap; margin-bottom: 12px; font-family: 'Share Tech Mono', monospace;
+  }
+
+  /* BADGE */
+  .badge-ok { background: #00e68218; border: 1px solid #00e68244; border-radius: 8px; padding: 10px 12px; margin-bottom: 14px; font-size: 11px; color: var(--ok); letter-spacing: 1px; }
+  .badge-err { background: #ff3c5a18; border: 1px solid #ff3c5a44; border-radius: 8px; padding: 10px 12px; margin-bottom: 14px; font-size: 11px; color: var(--danger); letter-spacing: 1px; }
+
+  /* TOAST */
+  #toast {
+    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(80px);
+    background: var(--card); border: 1px solid #00e68266; color: var(--ok);
+    padding: 11px 22px; border-radius: 8px; font-size: 12px; letter-spacing: 1px;
+    z-index: 999; white-space: nowrap; transition: transform 0.3s ease, opacity 0.3s;
+    opacity: 0; box-shadow: 0 0 20px #00e68233;
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+  #toast.err { border-color: #ff3c5a66; color: var(--danger); box-shadow: 0 0 20px #ff3c5a33; }
+
+  /* STEP LIST */
+  .step { display: flex; gap: 12px; margin-bottom: 12px; align-items: flex-start; }
+  .step-num { min-width: 24px; height: 24px; border-radius: 50%; background: #0066aa22; color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; border: 1px solid #0066aa66; flex-shrink: 0; }
+  .step-txt { font-size: 12px; color: var(--sub); line-height: 1.6; padding-top: 3px; }
+
+  /* SCAN LINE EFFECT */
+  body::after {
+    content: ''; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,210,255,0.015) 2px, rgba(0,210,255,0.015) 4px);
+    pointer-events: none; z-index: 9999;
+  }
+
+  /* GLOW LINE */
+  .glow-line { height: 1px; background: linear-gradient(90deg, transparent, #00d2ff88, transparent); margin: 6px 0 20px; }
+
+  /* LOADING SPINNER */
+  .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid #00d2ff44; border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* URL BOX */
+  .url-box { background: #02040a; border: 1px solid #0066aa33; border-radius: 8px; padding: 12px; font-size: 10px; color: var(--sub); word-break: break-all; line-height: 1.6; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-sub">◈ NEXUS SYSTEM</div>
+  <div class="header-title">DELTA KEY MANAGER</div>
+</div>
+
+<!-- TABS (hidden on setup) -->
+<div class="tabs" id="tabs" style="display:none">
+  <button class="tab active" onclick="goTo('panel')" id="tab-panel">🔑 KEYS</button>
+  <button class="tab" onclick="goTo('script')" id="tab-script">📜 SCRIPT</button>
+  <button class="tab tab-settings" onclick="goTo('setup')" id="tab-setup">⚙️</button>
+</div>
+
+<!-- ══ PAGE: SETUP ══ -->
+<div class="page active" id="page-setup">
+  <div class="card">
+    <div class="card-title"><span class="dot"></span> CONFIGURAÇÃO</div>
+    <div id="saved-badge" style="display:none" class="badge-ok">✅ DADOS SALVOS — CAMPOS JÁ PREENCHIDOS</div>
+    <label>🔐 GITHUB TOKEN</label>
+    <input type="password" id="input-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+    <label>📁 GIST ID</label>
+    <input type="text" id="input-gist" placeholder="d7007842b5e723e64913482c9ab43dec">
+    <button class="btn" id="btn-connect" onclick="connect()">⚡ CONECTAR</button>
+    <button class="btn btn-danger btn-last" id="btn-clear" style="display:none" onclick="clearSaved()">🗑 APAGAR DADOS SALVOS</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="dot"></span> PASSO A PASSO</div>
+    <div class="step"><div class="step-num">1</div><div class="step-txt">Acesse <strong>github.com</strong> → toque na sua foto → <strong>Settings</strong></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-txt">Role até o fim → toque em <strong>Developer settings</strong></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-txt">Toque em <strong>Personal access tokens → Tokens (classic)</strong></div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-txt">Toque em <strong>Generate new token (classic)</strong></div></div>
+    <div class="step"><div class="step-num">5</div><div class="step-txt">Note: escreva <code>delta</code> | Expiration: <strong>No expiration</strong></div></div>
+    <div class="step"><div class="step-num">6</div><div class="step-txt">Role e marque ✅ <strong>gist</strong> → toque em <strong>Generate token</strong></div></div>
+    <div class="step"><div class="step-num">7</div><div class="step-txt">Copie o <strong>ghp_...</strong> e cole no campo TOKEN acima</div></div>
+    <div class="step"><div class="step-num">8</div><div class="step-txt">No GIST ID cole: <strong>d7007842b5e723e64913482c9ab43dec</strong></div></div>
+    <div class="step"><div class="step-num">9</div><div class="step-txt">Toque em ⚡ CONECTAR</div></div>
+  </div>
+</div>
+
+<!-- ══ PAGE: PANEL ══ -->
+<div class="page" id="page-panel">
+  <!-- stats -->
+  <div class="card" style="padding:14px 18px">
+    <div class="stats">
+      <div class="stat"><span class="stat-num" id="stat-active">0</span><span class="stat-label">Ativas</span></div>
+      <div class="stat"><span class="stat-num danger" id="stat-expired">0</span><span class="stat-label">Expiradas</span></div>
+      <div class="stat"><span class="stat-num sub" id="stat-total">0</span><span class="stat-label">Total</span></div>
+    </div>
+  </div>
+
+  <!-- generate -->
+  <div class="card">
+    <div class="card-title"><span class="dot dot-ok"></span> GERAR KEY COM PRAZO</div>
+    <div class="durations" id="durations">
+      <div class="dur-pill" data-secs="3600"    data-label="1 Hora">1 Hora</div>
+      <div class="dur-pill" data-secs="86400"   data-label="24 Horas">24 Horas</div>
+      <div class="dur-pill" data-secs="604800"  data-label="7 Dias">7 Dias</div>
+      <div class="dur-pill active" data-secs="2592000" data-label="30 Dias">30 Dias</div>
+      <div class="dur-pill" data-secs="0"       data-label="Vitalício">Vitalício ♾</div>
+    </div>
+    <button class="btn btn-ok btn-last" id="btn-gen" onclick="generateKey()">⚡ GERAR KEY</button>
+  </div>
+
+  <!-- key list -->
+  <div class="card">
+    <div class="card-title"><span class="dot"></span> KEYS ATIVAS <span id="key-count">(0)</span></div>
+    <div id="key-list"><div class="empty">Nenhuma key criada ainda.<br>Toque em GERAR para criar.</div></div>
+  </div>
+
+  <!-- raw url -->
+  <div class="card" id="url-card" style="display:none">
+    <div class="card-title"><span class="dot"></span> URL DO BANCO DE KEYS</div>
+    <div class="url-box" id="url-display"></div>
+    <button class="btn btn-last" onclick="copyText(document.getElementById('url-display').textContent)">📋 COPIAR URL</button>
+  </div>
+</div>
+
+<!-- ══ PAGE: SCRIPT ══ -->
+<div class="page" id="page-script">
+  <div class="card">
+    <div class="card-title"><span class="dot"></span> CÓDIGO PARA SEU SCRIPT LUA</div>
+    <p style="font-size:12px;color:var(--sub);line-height:1.6;margin-bottom:12px">Cole isso no <strong style="color:var(--text)">início</strong> do seu script, antes de tudo:</p>
+    <div class="code-box" id="script-code"></div>
+    <button class="btn btn-last" onclick="copyText(document.getElementById('script-code').textContent)">📋 COPIAR CÓDIGO</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="dot"></span> COMO FUNCIONA</div>
+    <div class="step"><div style="font-size:18px;flex-shrink:0">🔑</div><div class="step-txt">Você gera uma key com prazo no painel</div></div>
+    <div class="step"><div style="font-size:18px;flex-shrink:0">📜</div><div class="step-txt">Cola o código Lua no início do seu script</div></div>
+    <div class="step"><div style="font-size:18px;flex-shrink:0">🎮</div><div class="step-txt">O player coloca a key no campo MINHA_KEY</div></div>
+    <div class="step"><div style="font-size:18px;flex-shrink:0">✅</div><div class="step-txt">Script verifica online se a key é válida e não expirou</div></div>
+    <div class="step"><div style="font-size:18px;flex-shrink:0">🗑</div><div class="step-txt">Deletou a key no painel? Para de funcionar na hora!</div></div>
+    <div class="step"><div style="font-size:18px;flex-shrink:0">⏱</div><div class="step-txt">Key expirou automaticamente? O script para sozinho!</div></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════
+let TOKEN   = localStorage.getItem('dk_token') || '';
+let GIST_ID = localStorage.getItem('dk_gist')  || '';
+let OWNER   = localStorage.getItem('dk_owner') || '';
+let KEYS    = [];
+let SEL_DUR = { secs: 2592000, label: '30 Dias' };
+let LOADING = false;
+let GIST_URL = '';
+
+// ═══════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════
+(function init() {
+  if (TOKEN) document.getElementById('input-token').value = TOKEN;
+  if (GIST_ID) document.getElementById('input-gist').value = GIST_ID;
+  if (TOKEN && GIST_ID) {
+    document.getElementById('saved-badge').style.display = 'block';
+    document.getElementById('btn-clear').style.display = 'block';
+  }
+
+  // Duration pills
+  document.querySelectorAll('.dur-pill').forEach(p => {
+    p.addEventListener('click', () => {
+      document.querySelectorAll('.dur-pill').forEach(x => x.classList.remove('active'));
+      p.classList.add('active');
+      SEL_DUR = { secs: parseInt(p.dataset.secs), label: p.dataset.label };
+    });
+  });
+
+  updateScriptCode();
+})();
+
+// ═══════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════
+function goTo(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  const tab = document.getElementById('tab-' + page);
+  if (tab) tab.classList.add('active');
+}
+
+// ═══════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════
+let toastTimer;
+function showToast(msg, isErr = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show' + (isErr ? ' err' : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.className = ''; }, 2500);
+}
+
+// ═══════════════════════════════════════
+//  COPY
+// ═══════════════════════════════════════
+function copyText(text) {
+  navigator.clipboard.writeText(text).then(() => showToast('📋 Copiado!'));
+}
+
+// ═══════════════════════════════════════
+//  CONNECT
+// ═══════════════════════════════════════
+async function connect() {
+  TOKEN   = document.getElementById('input-token').value.trim();
+  GIST_ID = document.getElementById('input-gist').value.trim();
+  if (!TOKEN || !GIST_ID) { showToast('Preencha os dois campos!', true); return; }
+  setLoading(true, 'btn-connect', '⏳ CONECTANDO...');
+  try {
+    const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+      headers: { Authorization: `token ${TOKEN}`, Accept: 'application/vnd.github.v3+json' }
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const file = Object.values(data.files)[0];
+    OWNER = data.owner?.login || '';
+    try { KEYS = JSON.parse(file.content); } catch(e) { KEYS = []; }
+    if (!Array.isArray(KEYS)) KEYS = [];
+    GIST_URL = `https://gist.githubusercontent.com/${OWNER}/${GIST_ID}/raw/keys.json`;
+    localStorage.setItem('dk_token', TOKEN);
+    localStorage.setItem('dk_gist',  GIST_ID);
+    localStorage.setItem('dk_owner', OWNER);
+    document.getElementById('tabs').style.display = 'flex';
+    updateScriptCode();
+    renderKeys();
+    goTo('panel');
+    showToast('✅ Conectado com sucesso!');
+  } catch(e) {
+    showToast('❌ Token ou Gist ID inválido!', true);
+  }
+  setLoading(false, 'btn-connect', '⚡ CONECTAR');
+}
+
+// ═══════════════════════════════════════
+//  CLEAR SAVED
+// ═══════════════════════════════════════
+function clearSaved() {
+  localStorage.removeItem('dk_token');
+  localStorage.removeItem('dk_gist');
+  localStorage.removeItem('dk_owner');
+  TOKEN = ''; GIST_ID = ''; OWNER = ''; KEYS = [];
+  document.getElementById('input-token').value = '';
+  document.getElementById('input-gist').value  = '';
+  document.getElementById('saved-badge').style.display = 'none';
+  document.getElementById('btn-clear').style.display   = 'none';
+  document.getElementById('tabs').style.display = 'none';
+  goTo('setup');
+  showToast('🗑 Dados apagados');
+}
+
+// ═══════════════════════════════════════
+//  GENERATE KEY
+// ═══════════════════════════════════════
+function genKeyStr() {
+  const c = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const s = () => Array.from({length:4}, () => c[Math.floor(Math.random()*c.length)]).join('');
+  return `DELTA-${s()}-${s()}-${s()}`;
+}
+
+async function generateKey() {
+  const secs = SEL_DUR.secs;
+  const now  = Math.floor(Date.now() / 1000);
+  const entry = {
+    key:      genKeyStr(),
+    duration: SEL_DUR.label,
+    created:  now,
+    expires:  secs > 0 ? now + secs : null
+  };
+  await pushKeys([...KEYS, entry]);
+}
+
+// ═══════════════════════════════════════
+//  DELETE KEY
+// ═══════════════════════════════════════
+async function deleteKey(key) {
+  await pushKeys(KEYS.filter(k => k.key !== key));
+}
+
+// ═══════════════════════════════════════
+//  PUSH KEYS TO GIST
+// ═══════════════════════════════════════
+async function pushKeys(newKeys) {
+  setLoading(true, 'btn-gen', '⏳ SALVANDO...');
+  try {
+    const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+      method:  'PATCH',
+      headers: { Authorization: `token ${TOKEN}`, Accept: 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ files: { 'keys.json': { content: JSON.stringify(newKeys, null, 2) } } })
+    });
+    if (!res.ok) throw new Error();
+    KEYS = newKeys;
+    renderKeys();
+    showToast('✅ Salvo!');
+  } catch {
+    showToast('❌ Erro ao salvar', true);
+  }
+  setLoading(false, 'btn-gen', '⚡ GERAR KEY');
+}
+
+// ═══════════════════════════════════════
+//  TIME LEFT
+// ═══════════════════════════════════════
+function timeLeft(expires) {
+  if (!expires) return '♾ Vitalício';
+  const diff = expires - Math.floor(Date.now() / 1000);
+  if (diff <= 0)        return '❌ Expirada';
+  if (diff < 3600)      return `⏱ ${Math.floor(diff/60)}min`;
+  if (diff < 86400)     return `⏱ ${Math.floor(diff/3600)}h restantes`;
+  return                       `⏱ ${Math.floor(diff/86400)}d restantes`;
+}
+function isExpired(expires) {
+  return expires && Math.floor(Date.now()/1000) > expires;
+}
+
+// ═══════════════════════════════════════
+//  RENDER KEYS
+// ═══════════════════════════════════════
+function renderKeys() {
+  const active  = KEYS.filter(k => !isExpired(k.expires));
+  const expired = KEYS.filter(k =>  isExpired(k.expires));
+
+  document.getElementById('stat-active').textContent  = active.length;
+  document.getElementById('stat-expired').textContent = expired.length;
+  document.getElementById('stat-total').textContent   = KEYS.length;
+  document.getElementById('key-count').textContent    = `(${KEYS.length})`;
+
+  // URL card
+  if (GIST_URL) {
+    document.getElementById('url-card').style.display   = 'block';
+    document.getElementById('url-display').textContent  = GIST_URL;
+  }
+
+  const list = document.getElementById('key-list');
+  if (KEYS.length === 0) {
+    list.innerHTML = '<div class="empty">Nenhuma key criada ainda.<br>Toque em GERAR para criar.</div>';
+    return;
+  }
+
+  list.innerHTML = [...active, ...expired].map(entry => {
+    const exp  = isExpired(entry.expires);
+    const tl   = timeLeft(entry.expires);
+    return `
+      <div class="key-row ${exp ? 'expired' : ''}">
+        <div class="key-row-top">
+          <span class="key-text ${exp ? 'expired' : ''}">${entry.key}</span>
+          <button class="btn btn-small" onclick="copyText('${entry.key}')">📋</button>
+          <button class="btn btn-danger btn-small" onclick="deleteKey('${entry.key}')">🗑</button>
+        </div>
+        <div class="key-row-bottom">
+          <span class="key-time ${exp ? 'expired' : ''}">${tl}</span>
+          <span class="key-dur">• ${entry.duration || '—'}</span>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════
+//  SCRIPT CODE
+// ═══════════════════════════════════════
+function updateScriptCode() {
+  const url = GIST_URL || 'URL_DO_SEU_GIST_AQUI';
+  document.getElementById('script-code').textContent =
+`-- ═══════════════════════════════
+--  SISTEMA DE KEY — DELTA
+-- ═══════════════════════════════
+local KEY_URL = "${url}"
+
+local function CheckKey(userKey)
+    local ok, raw = pcall(game.HttpGet, game, KEY_URL)
+    if not ok or not raw then
+        return false, "Sem conexão"
+    end
+    for entry in raw:gmatch('{[^}]+}') do
+        local k = entry:match('"key"%s*:%s*"([^"]+)"')
+        if k == userKey then
+            local exp = entry:match('"expires"%s*:%s*(%d+)')
+            if exp then
+                if os.time() > tonumber(exp) then
+                    return false, "Key expirada!"
+                end
+            end
+            return true, "OK"
+        end
+    end
+    return false, "Key inválida!"
+end
+
+-- ═══════════════════════════════
+--  COLE SUA KEY AQUI:
+-- ═══════════════════════════════
+local MINHA_KEY = "DELTA-XXXX-XXXX-XXXX"
+
+local valida, msg = CheckKey(MINHA_KEY)
+if not valida then
+    warn("❌ " .. msg)
+    return
+end
+print("✅ Key válida! Iniciando script...")
+-- COLE O RESTO DO SEU SCRIPT ABAIXO`;
+}
+
+// ═══════════════════════════════════════
+//  LOADING STATE
+// ═══════════════════════════════════════
+function setLoading(on, btnId, txt) {
+  LOADING = on;
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  btn.disabled = on;
+  btn.innerHTML = on ? `<span class="spinner"></span> ${txt}` : txt;
+}
+</script>
+</body>
+</html>
