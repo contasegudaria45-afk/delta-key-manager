@@ -157,24 +157,26 @@
 
   /* URL BOX */
   .url-box { background: #02040a; border: 1px solid #0066aa33; border-radius: 8px; padding: 12px; font-size: 10px; color: var(--sub); word-break: break-all; line-height: 1.6; margin-bottom: 10px; }
+
+  /* TAF CONTENT */
+  .taf-content { display: none; }
+  .taf-content.active { display: block; }
 </style>
 </head>
 <body>
 
-<!-- HEADER -->
 <div class="header">
   <div class="header-sub">◈ NEXUS SYSTEM</div>
   <div class="header-title">DELTA KEY MANAGER</div>
 </div>
 
-<!-- TABS (hidden on setup) -->
 <div class="tabs" id="tabs" style="display:none">
   <button class="tab active" onclick="goTo('panel')" id="tab-panel">🔑 KEYS</button>
   <button class="tab" onclick="goTo('script')" id="tab-script">📜 SCRIPT</button>
+  <button class="tab" onclick="goTo('taf')" id="tab-taf">📋 TAF</button>
   <button class="tab tab-settings" onclick="goTo('setup')" id="tab-setup">⚙️</button>
 </div>
 
-<!-- ══ PAGE: SETUP ══ -->
 <div class="page active" id="page-setup">
   <div class="card">
     <div class="card-title"><span class="dot"></span> CONFIGURAÇÃO</div>
@@ -201,9 +203,7 @@
   </div>
 </div>
 
-<!-- ══ PAGE: PANEL ══ -->
 <div class="page" id="page-panel">
-  <!-- stats -->
   <div class="card" style="padding:14px 18px">
     <div class="stats">
       <div class="stat"><span class="stat-num" id="stat-active">0</span><span class="stat-label">Ativas</span></div>
@@ -212,7 +212,6 @@
     </div>
   </div>
 
-  <!-- generate -->
   <div class="card">
     <div class="card-title"><span class="dot dot-ok"></span> GERAR KEY COM PRAZO</div>
     <div class="durations" id="durations">
@@ -225,13 +224,11 @@
     <button class="btn btn-ok btn-last" id="btn-gen" onclick="generateKey()">⚡ GERAR KEY</button>
   </div>
 
-  <!-- key list -->
   <div class="card">
     <div class="card-title"><span class="dot"></span> KEYS ATIVAS <span id="key-count">(0)</span></div>
     <div id="key-list"><div class="empty">Nenhuma key criada ainda.<br>Toque em GERAR para criar.</div></div>
   </div>
 
-  <!-- raw url -->
   <div class="card" id="url-card" style="display:none">
     <div class="card-title"><span class="dot"></span> URL DO BANCO DE KEYS</div>
     <div class="url-box" id="url-display"></div>
@@ -239,7 +236,6 @@
   </div>
 </div>
 
-<!-- ══ PAGE: SCRIPT ══ -->
 <div class="page" id="page-script">
   <div class="card">
     <div class="card-title"><span class="dot"></span> CÓDIGO PARA SEU SCRIPT LUA</div>
@@ -259,7 +255,73 @@
   </div>
 </div>
 
-<!-- TOAST -->
+<div class="page" id="page-taf">
+  <div class="card">
+    <div class="card-title"><span class="dot"></span> SELECIONE A DIVISÃO</div>
+    <div class="durations" id="taf-tabs">
+      <div class="dur-pill active" onclick="showTAF('BAC')">BAC</div>
+      <div class="dur-pill" onclick="showTAF('CIE')">CIE</div>
+      <div class="dur-pill" onclick="showTAF('BPE')">BPE</div>
+      <div class="dur-pill" onclick="showTAF('BFE')">BFE</div>
+      <div class="dur-pill" onclick="showTAF('REC_MEC')">REC MEC</div>
+    </div>
+  </div>
+
+  <div id="taf-BAC" class="taf-content active">
+    <div class="card">
+      <div class="card-title"><span class="dot dot-ok"></span> DIVISÃO BAC</div>
+      <button class="btn" onclick="copyText('Comandante: dgzincomanf01. e Subcomandante: SasukeeePro202.')">📋 Copiar Cmdt e Sub</button>
+      <button class="btn" onclick="copyText('dgzincomanf01.')">📋 Copiar Comandante</button>
+      <button class="btn" onclick="copyText('SasukeeePro202.')">📋 Copiar Subcomandante</button>
+      <button class="btn" onclick="copyText('O máximo de confusão, morte e destruição na retaguarda do inimigo.')">📋 Copiar Lema</button>
+      <button class="btn btn-last" onclick="copyText('A divisão BAC representa disciplina, união e compromisso entre todos os seus membros. Tenho grande respeito por essa divisão e admiro o trabalho que cada integrante realiza dentro dela.')">📋 Copiar Texto</button>
+    </div>
+  </div>
+
+  <div id="taf-CIE" class="taf-content">
+    <div class="card">
+      <div class="card-title"><span class="dot dot-ok"></span> DIVISÃO CIE</div>
+      <button class="btn" onclick="copyText('Comandante: eriqurrr. e Subcomandante: Minakaanaa.')">📋 Copiar Cmdt e Sub</button>
+      <button class="btn" onclick="copyText('eriqurrr.')">📋 Copiar Comandante</button>
+      <button class="btn" onclick="copyText('Minakaanaa.')">📋 Copiar Subcomandante</button>
+      <button class="btn" onclick="copyText('“Saber para Prever” e “Inteligência para Vitória”.')">📋 Copiar Lema</button>
+      <button class="btn btn-last" onclick="copyText('O CIE trabalha com inteligência e investigação militar. Já o BFE atua em operações especiais e combate tático.')">📋 Copiar Texto</button>
+    </div>
+  </div>
+
+  <div id="taf-BPE" class="taf-content">
+    <div class="card">
+      <div class="card-title"><span class="dot dot-ok"></span> DIVISÃO BPE</div>
+      <button class="btn" onclick="copyText('Donos: MateusHgz. e BlackFoxGamer2711.')">📋 Copiar Donos</button>
+      <button class="btn" onclick="copyText('Comandante: zCostaz e Subcomandante: Matheuslindo587.')">📋 Copiar Cmdt e Sub</button>
+      <button class="btn" onclick="copyText('zCostaz')">📋 Copiar Comandante</button>
+      <button class="btn" onclick="copyText('Matheuslindo587.')">📋 Copiar Subcomandante</button>
+      <button class="btn btn-last" onclick="copyText('Orientar o responsável, corrigir o irresponsável e prender o incorrigível.')">📋 Copiar Lema</button>
+    </div>
+  </div>
+
+  <div id="taf-BFE" class="taf-content">
+    <div class="card">
+      <div class="card-title"><span class="dot dot-ok"></span> DIVISÃO BFE</div>
+      <button class="btn" onclick="copyText('Comandante: NATANHMELLO4. e Subcomandante: RenanFoxiy.')">📋 Copiar Cmdt e Sub</button>
+      <button class="btn" onclick="copyText('NATANHMELLO4.')">📋 Copiar Comandante</button>
+      <button class="btn" onclick="copyText('RenanFoxiy.')">📋 Copiar Subcomandante</button>
+      <button class="btn" onclick="copyText('Qualquer missão, em qualquer lugar, a qualquer hora, de qualquer maneira.')">📋 Copiar Lema</button>
+      <button class="btn btn-last" onclick="copyText('Não sou mais um peso morto, sou alguém disposto a aprender, evoluir e cumprir qualquer missão com responsabilidade, disciplina e determinação.\n\nBFE:\nQualquer missão, em qualquer lugar, a qualquer hora, de qualquer maneira.\n\nCIE:\n“Saber para Prever” e “Inteligência para Vitória”.')">📋 Copiar Texto</button>
+    </div>
+  </div>
+
+  <div id="taf-REC_MEC" class="taf-content">
+    <div class="card">
+      <div class="card-title"><span class="dot dot-ok"></span> DIVISÃO REC MEC</div>
+      <button class="btn" onclick="copyText('Comandante: Arthur1robodiamante. e Subcomandante: zoro_roronoroa.')">📋 Copiar Cmdt e Sub</button>
+      <button class="btn" onclick="copyText('Arthur1robodiamante.')">📋 Copiar Comandante</button>
+      <button class="btn" onclick="copyText('zoro_roronoroa.')">📋 Copiar Subcomandante</button>
+      <button class="btn btn-last" onclick="copyText('“Haverá sempre uma Cavalaria!” & “Aço na mente, motor no peito e honra na missão!”')">📋 Copiar Lema</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
@@ -286,9 +348,9 @@ let GIST_URL = '';
   }
 
   // Duration pills
-  document.querySelectorAll('.dur-pill').forEach(p => {
+  document.querySelectorAll('#durations .dur-pill').forEach(p => {
     p.addEventListener('click', () => {
-      document.querySelectorAll('.dur-pill').forEach(x => x.classList.remove('active'));
+      document.querySelectorAll('#durations .dur-pill').forEach(x => x.classList.remove('active'));
       p.classList.add('active');
       SEL_DUR = { secs: parseInt(p.dataset.secs), label: p.dataset.label };
     });
@@ -298,7 +360,7 @@ let GIST_URL = '';
 })();
 
 // ═══════════════════════════════════════
-//  NAVIGATION
+//  NAVIGATION & TAF
 // ═══════════════════════════════════════
 function goTo(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -306,6 +368,15 @@ function goTo(page) {
   document.getElementById('page-' + page).classList.add('active');
   const tab = document.getElementById('tab-' + page);
   if (tab) tab.classList.add('active');
+}
+
+function showTAF(div) {
+  document.querySelectorAll('#taf-tabs .dur-pill').forEach(p => {
+    p.classList.remove('active');
+    if (p.textContent.trim() === div.replace('_', ' ')) p.classList.add('active');
+  });
+  document.querySelectorAll('.taf-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('taf-' + div).classList.add('active');
 }
 
 // ═══════════════════════════════════════
